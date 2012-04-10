@@ -61,6 +61,7 @@
 #include "watchhandler.h"
 #include "watchwindow.h"
 #include "watchutils.h"
+#include "visualizer.h"
 #include "debuggertooltipmanager.h"
 
 #include "snapshothandler.h"
@@ -1174,6 +1175,7 @@ public:
     QTreeView *m_returnWindow;
     QTreeView *m_localsWindow;
     QTreeView *m_watchersWindow;
+    QTreeView *m_visualizerWindow;
     QAbstractItemView *m_registerWindow;
     QAbstractItemView *m_modulesWindow;
     QAbstractItemView *m_snapshotWindow;
@@ -1226,6 +1228,7 @@ DebuggerPluginPrivate::DebuggerPluginPrivate(DebuggerPlugin *plugin) :
     m_breakHandler = 0;
     m_returnWindow = 0;
     m_localsWindow = 0;
+    m_visualizerWindow = 0;
     m_watchersWindow = 0;
     m_registerWindow = 0;
     m_modulesWindow = 0;
@@ -2094,6 +2097,7 @@ void DebuggerPluginPrivate::connectEngine(DebuggerEngine *engine)
     //m_threadBox->setModel(engine->threadsModel());
     //m_threadBox->setModelColumn(ThreadData::ComboNameColumn);
     m_watchersWindow->setModel(engine->watchersModel());
+    m_visualizerWindow->setModel(engine->watchersModel());
     m_qtMessageLogWindow->setModel(engine->qtMessageLogModel());
 
     engine->watchHandler()->rebuildModel();
@@ -2125,6 +2129,7 @@ void DebuggerPluginPrivate::fontSettingsChanged
     changeFontSize(m_stackWindow, size);
     changeFontSize(m_threadsWindow, size);
     changeFontSize(m_watchersWindow, size);
+    changeFontSize(m_visualizerWindow, size);
 }
 
 void DebuggerPluginPrivate::cleanupViews()
@@ -2171,6 +2176,7 @@ void DebuggerPluginPrivate::setBusyCursor(bool busy)
     m_sourceFilesWindow->setCursor(cursor);
     m_stackWindow->setCursor(cursor);
     m_threadsWindow->setCursor(cursor);
+    m_visualizerWindow->setCursor(cursor);
     m_watchersWindow->setCursor(cursor);
     m_snapshotWindow->setCursor(cursor);
 }
@@ -2178,6 +2184,7 @@ void DebuggerPluginPrivate::setBusyCursor(bool busy)
 void DebuggerPluginPrivate::setInitialState()
 {
     m_watchersWindow->setVisible(false);
+    m_visualizerWindow->setVisible(true);
     m_returnWindow->setVisible(false);
     setBusyCursor(false);
     m_reverseDirectionAction->setChecked(false);
@@ -2889,6 +2896,9 @@ void DebuggerPluginPrivate::extensionsInitialized()
     m_watchersWindow = new WatchWindow(WatchWindow::WatchersType);
     m_watchersWindow->setObjectName(QLatin1String("CppDebugWatchers"));
 
+    m_visualizerWindow = new VisualizerWindow(VisualizerWindow::WatchersType);
+    m_visualizerWindow->setObjectName(QLatin1String("Visualizer"));
+
     // Snapshot
     m_snapshotHandler = new SnapshotHandler;
     m_snapshotWindow = new SnapshotWindow(m_snapshotHandler);
@@ -3017,6 +3027,14 @@ void DebuggerPluginPrivate::extensionsInitialized()
 
     dock = m_mainWindow->createDockWidget(CppLanguage, localsAndWatchers);
     dock->setProperty(DOCKWIDGET_DEFAULT_AREA, Qt::RightDockWidgetArea);
+
+    QSplitter *visualizer = new MiniSplitter(Qt::Horizontal);
+    visualizer->setObjectName(QLatin1String("Visualizer"));
+    visualizer->setWindowTitle(m_visualizerWindow->windowTitle());
+    visualizer->addWidget(m_visualizerWindow);
+
+    dock = m_mainWindow->createDockWidget(CppLanguage, visualizer);
+    dock->setProperty(DOCKWIDGET_DEFAULT_AREA, Qt::LeftDockWidgetArea);
 
     m_mainWindow->addStagedMenuEntries();
 
