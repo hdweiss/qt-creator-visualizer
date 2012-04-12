@@ -2097,7 +2097,7 @@ void DebuggerPluginPrivate::connectEngine(DebuggerEngine *engine)
     //m_threadBox->setModel(engine->threadsModel());
     //m_threadBox->setModelColumn(ThreadData::ComboNameColumn);
     m_watchersWindow->setModel(engine->watchersModel());
-    m_visualizerWindow->setModel(engine->watchersModel());
+    //m_visualizerWindow->setModel(engine->watchersModel());
     m_qtMessageLogWindow->setModel(engine->qtMessageLogModel());
 
     engine->watchHandler()->rebuildModel();
@@ -2896,7 +2896,7 @@ void DebuggerPluginPrivate::extensionsInitialized()
     m_watchersWindow = new WatchWindow(WatchWindow::WatchersType);
     m_watchersWindow->setObjectName(QLatin1String("CppDebugWatchers"));
 
-    m_visualizerWindow = new VisualizerWindow(VisualizerWindow::WatchersType);
+    m_visualizerWindow = new VisualizerWindow();
     m_visualizerWindow->setObjectName(QLatin1String("Visualizer"));
 
     // Snapshot
@@ -3028,13 +3028,12 @@ void DebuggerPluginPrivate::extensionsInitialized()
     dock = m_mainWindow->createDockWidget(CppLanguage, localsAndWatchers);
     dock->setProperty(DOCKWIDGET_DEFAULT_AREA, Qt::RightDockWidgetArea);
 
-    QSplitter *visualizer = new MiniSplitter(Qt::Horizontal);
+    QSplitter *visualizer = new MiniSplitter(Qt::Vertical);
     visualizer->setObjectName(QLatin1String("Visualizer"));
     visualizer->setWindowTitle(m_visualizerWindow->windowTitle());
     visualizer->addWidget(m_visualizerWindow);
 
     dock = m_mainWindow->createDockWidget(CppLanguage, visualizer);
-    dock->setProperty(DOCKWIDGET_DEFAULT_AREA, Qt::LeftDockWidgetArea);
 
     m_mainWindow->addStagedMenuEntries();
 

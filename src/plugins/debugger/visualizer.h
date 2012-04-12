@@ -34,6 +34,11 @@
 #define DEBUGGER_VISUALIZER_H
 
 #include "basewindow.h"
+#include "visualizer_link.h"
+#include "visualizer_node.h"
+#include <QWidget>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 
 namespace Debugger {
 namespace Internal {
@@ -44,39 +49,33 @@ namespace Internal {
 //
 /////////////////////////////////////////////////////////////////////
 
-class VisualizerWindow : public QWidget
+class VisualizerWindow : public QGraphicsView
 {
     Q_OBJECT
 
 public:
-    enum Type { ReturnType, LocalsType, TooltipType, WatchersType };
-
-    explicit VisualizerWindow(Type type, QWidget *parent = 0);
-    Type type() const { return m_type; }
+    explicit VisualizerWindow(QWidget *parent = 0);
     void setModel(QAbstractItemModel *model);
 
 public slots:
     void watchExpression(const QString &exp);
     void removeWatchExpression(const QString &exp);
 
-private:
-    Q_SLOT void resetHelper();
+protected:
+//    void paintEvent(QPaintEvent *event);
 
     void keyPressEvent(QKeyEvent *ev);
+    void mouseDoubleClickEvent(QMouseEvent *ev);
     void contextMenuEvent(QContextMenuEvent *ev);
+
     void dragEnterEvent(QDragEnterEvent *ev);
     void dropEvent(QDropEvent *ev);
     void dragMoveEvent(QDragMoveEvent *ev);
-    void mouseDoubleClickEvent(QMouseEvent *ev);
-    bool event(QEvent *ev);
 
-    void resetHelper(const QModelIndex &idx);
-
-    void setModelData(int role, const QVariant &value = QVariant(),
-        const QModelIndex &index = QModelIndex());
-
-    Type m_type;
-    bool m_grabbing;
+private:
+    VisualizerNode* addNode(QString *name);
+    void addLink(VisualizerNode *node1, VisualizerNode *node2);
+    QGraphicsScene *scene;
 };
 
 

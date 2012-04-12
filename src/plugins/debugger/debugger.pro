@@ -73,7 +73,9 @@ HEADERS += \
     qtmessagelogproxymodel.h \
     qtmessagelogitemdelegate.h \
     qtmessageloghandler.h \
-    visualizer.h
+    visualizer.h \
+    visualizer_link.h \
+    visualizer_node.h
 
 SOURCES += \
     basewindow.cpp \
@@ -125,7 +127,9 @@ SOURCES += \
     qtmessagelogitemdelegate.cpp \
     qtmessageloghandler.cpp \
     qtmessagelogeditor.cpp \
-    visualizer.cpp
+    visualizer.cpp \
+    visualizer_link.cpp \
+    visualizer_node.cpp
 
 FORMS += attachexternaldialog.ui \
     attachcoredialog.ui \

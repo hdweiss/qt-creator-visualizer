@@ -31,6 +31,8 @@
 **************************************************************************/
 
 #include "visualizer.h"
+#include "visualizer_link.h"
+#include "visualizer_node.h"
 
 #include "breakhandler.h"
 #include "registerhandler.h"
@@ -55,6 +57,8 @@
 #include <QVariant>
 #include <QMimeData>
 
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QApplication>
 #include <QPalette>
 #include <QClipboard>
@@ -69,29 +73,55 @@
 namespace Debugger {
 namespace Internal {
 
-
 static DebuggerEngine *currentEngine()
 {
     return debuggerCore()->currentEngine();
 }
 
-VisualizerWindow::VisualizerWindow(Type type, QWidget *parent)
-  : m_type(type)
-{
-    setObjectName(QLatin1String("VisualizerWindow"));
-    m_grabbing = false;
-    setWindowTitle(tr("Visualizer"));
-    setAcceptDrops(true);
-    drawCircle();
+VisualizerNode* VisualizerWindow::addNode(QString *name) {
+    VisualizerNode *node = new VisualizerNode;
+    node->setText(*name);
+
+    node->setPos(QPoint(40,
+                        50));
+    scene->addItem(node);
+    return node;
 }
 
-void drawCircle() {
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing, true);
-    painter.setPen(QPen(Qt::black, 12, Qt::DashDotLine, Qt::RoundCap));
-    painter.setBrush(QBrush(Qt::green, Qt::SolidPattern));
-    painter.drawEllipse(80, 80, 400, 240);
+void VisualizerWindow::addLink(VisualizerNode* node1, VisualizerNode* node2) {
+    VisualizerLink *link = new VisualizerLink(node1, node2);
+    scene->addItem(link);
 }
+
+VisualizerWindow::VisualizerWindow(QWidget *parent)
+  : QGraphicsView(parent)
+{
+//    setMinimumSize(400, 400);
+//    setMaximumSize(400, 400);
+
+    setObjectName(QLatin1String("VisualizerWindow"));
+    setWindowTitle(tr("Visualizer"));
+    setAcceptDrops(true);
+    qDebug() << "VisualizeWindow()";
+
+    scene = new QGraphicsScene(0, 0, 600, 500);
+    setScene(scene);
+    setDragMode(QGraphicsView::RubberBandDrag);
+    setRenderHints(QPainter::Antialiasing
+                         | QPainter::TextAntialiasing);
+    setContextMenuPolicy(Qt::ActionsContextMenu);
+
+    VisualizerNode *node1 = addNode(new QString("Node 1"));
+    VisualizerNode *node2 = addNode(new QString("Node 2"));
+    addLink(node1, node2);
+}
+
+//void VisualizerWindow::paintEvent(QPaintEvent *event) {
+//    QPainter painter;
+//    painter.begin(this);
+//    painter.drawEllipse(2, 2, 200, 200);
+//    painter.end();
+//}
 
 void VisualizerWindow::keyPressEvent(QKeyEvent *ev)
 {
@@ -133,12 +163,6 @@ void VisualizerWindow::contextMenuEvent(QContextMenuEvent *ev)
     WatchHandler *handler = engine->watchHandler();
 }
 
-bool VisualizerWindow::event(QEvent *ev)
-{
-    return false;
-}
-
-
 void VisualizerWindow::watchExpression(const QString &exp)
 {
 }
@@ -147,22 +171,6 @@ void VisualizerWindow::removeWatchExpression(const QString &exp)
 {
 }
 
-// Relics from AbstractItem
-
-void VisualizerWindow::resetHelper(const QModelIndex &idx)
-{
-}
-
-void VisualizerWindow::setModel(QAbstractItemModel *model)
-{
-}
-
-void VisualizerWindow::setModelData
-    (int role, const QVariant &value, const QModelIndex &index)
-{
-    //QTC_ASSERT(model(), return);
-    //model()->setData(index, value, role);
-}
 
 } // namespace Internal
 } // namespace Debugger
