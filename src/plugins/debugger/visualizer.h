@@ -44,7 +44,7 @@ namespace Internal {
 //
 /////////////////////////////////////////////////////////////////////
 
-class VisualizerWindow : public BaseWindow
+class VisualizerWindow : public QWidget
 {
     Q_OBJECT
 
@@ -53,6 +53,7 @@ public:
 
     explicit VisualizerWindow(Type type, QWidget *parent = 0);
     Type type() const { return m_type; }
+    void setModel(QAbstractItemModel *model);
 
 public slots:
     void watchExpression(const QString &exp);
@@ -60,10 +61,7 @@ public slots:
 
 private:
     Q_SLOT void resetHelper();
-    Q_SLOT void expandNode(const QModelIndex &idx);
-    Q_SLOT void collapseNode(const QModelIndex &idx);
 
-    void setModel(QAbstractItemModel *model);
     void keyPressEvent(QKeyEvent *ev);
     void contextMenuEvent(QContextMenuEvent *ev);
     void dragEnterEvent(QDragEnterEvent *ev);
@@ -72,10 +70,7 @@ private:
     void mouseDoubleClickEvent(QMouseEvent *ev);
     bool event(QEvent *ev);
 
-    void editItem(const QModelIndex &idx);
     void resetHelper(const QModelIndex &idx);
-    void setWatchpointAtAddress(quint64 address, unsigned size);
-    void setWatchpointAtExpression(const QString &exp);
 
     void setModelData(int role, const QVariant &value = QVariant(),
         const QModelIndex &index = QModelIndex());

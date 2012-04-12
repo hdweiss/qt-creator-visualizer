@@ -1175,7 +1175,7 @@ public:
     QTreeView *m_returnWindow;
     QTreeView *m_localsWindow;
     QTreeView *m_watchersWindow;
-    QTreeView *m_visualizerWindow;
+    VisualizerWindow *m_visualizerWindow;
     QAbstractItemView *m_registerWindow;
     QAbstractItemView *m_modulesWindow;
     QAbstractItemView *m_snapshotWindow;
