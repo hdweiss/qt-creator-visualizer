@@ -66,7 +66,6 @@ protected slots:
 
 protected:
 
- //   bool edit(const QModelIndex &index, EditTrigger trigger, QEvent *event);
     QModelIndex moveCursor(QAbstractItemView::CursorAction cursorAction,
                            Qt::KeyboardModifiers modifiers);
 
@@ -90,11 +89,12 @@ private:
     void setupNodes();
     QString getWatchData(QModelIndex index);
 
-    QGraphicsScene *scene;
-    QGraphicsView *gview;
+    QGraphicsScene scene;
+    QGraphicsView gview;
 
     // Hack
     QMultiHash<QString, VisualizerNode*> nodemap;
+
 };
 
 

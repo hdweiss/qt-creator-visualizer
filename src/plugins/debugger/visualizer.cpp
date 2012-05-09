@@ -84,19 +84,21 @@ VisualizerNode* VisualizerWindow::addNode(QString *name) {
     node->setText(*name);
     node->setPos(QPoint(40, 50));
 
-    scene->addItem(node);
+    scene.addItem(node);
     return node;
 }
 
 void VisualizerWindow::addLink(VisualizerNode* node1, VisualizerNode* node2) {
     VisualizerLink *link = new VisualizerLink(node1, node2);
-    scene->addItem(link);
+    scene.addItem(link);
 }
 
 void VisualizerWindow::setupNodes()
 {
     VisualizerNode *node1 = addNode(new QString("Node 1"));
+    node1->setPos(20, 30);
     VisualizerNode *node2 = addNode(new QString("Node 2"));
+    node2->setPos(60, 70);
     addLink(node1, node2);
 }
 
@@ -106,14 +108,12 @@ VisualizerWindow::VisualizerWindow(QWidget *parent)
     setObjectName(QLatin1String("VisualizerWindow"));
     setWindowTitle(tr("Visualizer"));
     setAcceptDrops(true);
-    qDebug() << "VisualizeWindow()";
 
-    scene = new QGraphicsScene(0, 0, 600, 500);
-    gview = new QGraphicsView(scene);
+    scene.setSceneRect(0, 0, 600, 500);
+    gview.setScene(&scene);
+    setViewport(&gview);
 
-    setViewport(gview);
-
-   // setupNodes();
+    //setupNodes();
 }
 
 QString VisualizerWindow::getWatchData(QModelIndex index) {
@@ -123,8 +123,7 @@ QString VisualizerWindow::getWatchData(QModelIndex index) {
     QString rawType(model()->data(index, LocalsRawTypeRole).toString());
     QString expandRole(model()->data(index, LocalsExpandedRole).toString());
 
-    qDebug() << name << ":" << value << "@" << type << "%" << rawType << " "
-                << expandRole;
+    //qDebug() << name << ":" << value << "@" << type;
     return name + ":" + type + "@" + value;
 }
 
@@ -160,6 +159,18 @@ void VisualizerWindow::dataChanged(const QModelIndex &topLeft,
             VisualizerNode *node = nodemap.find(name).value();
             node->setText(getWatchData(index));
         }
+
+        QString type(model()->data(index, LocalsTypeRole).toString());
+        if(type == "QVector<QString>") {
+            qDebug() << name << " has children " << model()->hasChildren(index)
+                     << " dimen " << model()->rowCount(index) << "x" <<
+                        model()->columnCount(index);
+
+            QModelIndex childIndex1 = model()->index(0, 0, index);
+            QModelIndex childIndex2 = model()->index(0, 2, index);
+            qDebug() << "Child 0,0: " << getWatchData(childIndex1);
+            qDebug() << "Child 0,2: " << getWatchData(childIndex2);
+        }
     }
     viewport()->update();
 }
@@ -173,7 +184,7 @@ void VisualizerWindow::rowsAboutToBeRemoved(const QModelIndex &parent,
 
         if(nodemap.contains(name)) {
             VisualizerNode *node = nodemap.find(name).value();
-            scene->removeItem(node);
+            scene.removeItem(node);
             nodemap.remove(name);
         }
     }

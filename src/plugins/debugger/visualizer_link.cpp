@@ -18,6 +18,14 @@ VisualizerLink::VisualizerLink(VisualizerNode *fromVisualizerNode, VisualizerNod
     trackVisualizerNodes();
 }
 
+void VisualizerLink::paint(QPainter *painter,
+                           const QStyleOptionGraphicsItem *option,
+                           QWidget *widget) {
+    painter->setPen(pen());
+    painter->drawLine(QLineF(myFromVisualizerNode->pos(),
+                      myToVisualizerNode->pos()));
+}
+
 VisualizerLink::~VisualizerLink()
 {
     myFromVisualizerNode->removeVisualizerLink(this);
