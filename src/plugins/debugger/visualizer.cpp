@@ -113,8 +113,75 @@ VisualizerWindow::VisualizerWindow(QWidget *parent)
 
     setViewport(gview);
 
-    setupNodes();
+   // setupNodes();
 }
+
+QString VisualizerWindow::getWatchData(QModelIndex index) {
+    QString name(model()->data(index, LocalsNameRole).toString());
+    QString value(model()->data(index, LocalsRawValueRole).toString());
+    QString type(model()->data(index, LocalsTypeRole).toString());
+    QString rawType(model()->data(index, LocalsRawTypeRole).toString());
+    QString expandRole(model()->data(index, LocalsExpandedRole).toString());
+
+    qDebug() << name << ":" << value << "@" << type << "%" << rawType << " "
+                << expandRole;
+    return name + ":" + type + "@" + value;
+}
+
+void VisualizerWindow::rowsInserted(const QModelIndex &parent, int start, int end)
+{
+    for (int row = start; row <= end; ++row) {
+        QModelIndex index = model()->index(row, 1, rootIndex());
+        QString name(model()->data(index, LocalsNameRole).toString());
+
+        if(nodemap.contains(name)) {
+            VisualizerNode *node = nodemap.find(name).value();
+            node->setText(getWatchData(index));
+        } else {
+            VisualizerNode *node = addNode(&getWatchData(index));
+            nodemap.insert(name, node);
+        }
+    }
+
+    QAbstractItemView::rowsInserted(parent, start, end);
+}
+
+
+void VisualizerWindow::dataChanged(const QModelIndex &topLeft,
+                                   const QModelIndex &bottomRight)
+{
+    QAbstractItemView::dataChanged(topLeft, bottomRight);
+
+    for (int row = 0; row < model()->rowCount(rootIndex()); ++row) {
+        QModelIndex index = model()->index(row, 1, rootIndex());
+        QString name(model()->data(index, LocalsNameRole).toString());
+
+        if(nodemap.contains(name)) {
+            VisualizerNode *node = nodemap.find(name).value();
+            node->setText(getWatchData(index));
+        }
+    }
+    viewport()->update();
+}
+
+void VisualizerWindow::rowsAboutToBeRemoved(const QModelIndex &parent,
+                                            int start, int end)
+{
+    for (int row = start; row <= end; ++row) {
+        QModelIndex index = model()->index(row, 1, rootIndex());
+        QString name(model()->data(index, LocalsNameRole).toString());
+
+        if(nodemap.contains(name)) {
+            VisualizerNode *node = nodemap.find(name).value();
+            scene->removeItem(node);
+            nodemap.remove(name);
+        }
+    }
+
+    QAbstractItemView::rowsAboutToBeRemoved(parent, start, end);
+}
+
+/***** ****/
 
 void VisualizerWindow::paintEvent(QPaintEvent *event) {
 }
@@ -148,45 +215,9 @@ void VisualizerWindow::resizeEvent(QResizeEvent * /* event */)
     updateGeometries();
 }
 
-void VisualizerWindow::rowsInserted(const QModelIndex &parent, int start, int end)
-{
-    for (int row = start; row <= end; ++row) {
-
-        QModelIndex index = model()->index(row, 1, rootIndex());
-        double value = model()->data(index).toDouble();
-    }
-
-    QAbstractItemView::rowsInserted(parent, start, end);
-}
-
-void VisualizerWindow::rowsAboutToBeRemoved(const QModelIndex &parent, int start, int end)
-{
-    for (int row = start; row <= end; ++row) {
-
-        QModelIndex index = model()->index(row, 1, rootIndex());
-        double value = model()->data(index).toDouble();
-    }
-
-    QAbstractItemView::rowsAboutToBeRemoved(parent, start, end);
-}
-
 void VisualizerWindow::scrollContentsBy(int dx, int dy)
 {
     viewport()->scroll(dx, dy);
-}
-
-void VisualizerWindow::dataChanged(const QModelIndex &topLeft,
-                                   const QModelIndex &bottomRight)
-{
-    QAbstractItemView::dataChanged(topLeft, bottomRight);
-
-    for (int row = 0; row < model()->rowCount(rootIndex()); ++row) {
-
-        QModelIndex index = model()->index(row, 1, rootIndex());
-        double value = model()->data(index).toDouble();
-
-    }
-    viewport()->update();
 }
 
 bool VisualizerWindow::isIndexHidden(const QModelIndex & /*index*/) const
@@ -200,80 +231,17 @@ QModelIndex VisualizerWindow::indexAt(const QPoint &point) const
 }
 
 QRect VisualizerWindow::visualRect(const QModelIndex &index) const
-{
-    QRect rect = QRect();
-    if (rect.isValid())
-        return QRect(rect.left() - horizontalScrollBar()->value(),
-                     rect.top() - verticalScrollBar()->value(),
-                     rect.width(), rect.height());
-    else
-        return rect;
-}
+{}
 
 void VisualizerWindow::scrollTo(const QModelIndex &index, ScrollHint)
-{
-    QRect area = viewport()->rect();
-    QRect rect = visualRect(index);
-
-    if (rect.left() < area.left())
-        horizontalScrollBar()->setValue(
-                    horizontalScrollBar()->value() + rect.left() - area.left());
-    else if (rect.right() > area.right())
-        horizontalScrollBar()->setValue(
-                    horizontalScrollBar()->value() + qMin(
-                        rect.right() - area.right(), rect.left() - area.left()));
-
-    if (rect.top() < area.top())
-        verticalScrollBar()->setValue(
-                    verticalScrollBar()->value() + rect.top() - area.top());
-    else if (rect.bottom() > area.bottom())
-        verticalScrollBar()->setValue(
-                    verticalScrollBar()->value() + qMin(
-                        rect.bottom() - area.bottom(), rect.top() - area.top()));
-
-    update();
-}
+{}
 
 
 void VisualizerWindow::setSelection(const QRect &rect, QItemSelectionModel::SelectionFlags command)
-{
-}
+{}
 
 QRegion VisualizerWindow::visualRegionForSelection(const QItemSelection &selection) const
-{
-    int ranges = selection.count();
-
-    if (ranges == 0)
-        return QRect();
-
-    // Note that we use the top and bottom functions of the selection range
-    // since the data is stored in rows.
-
-    int firstRow = selection.at(0).top();
-    int lastRow = selection.at(0).top();
-
-    for (int i = 0; i < ranges; ++i) {
-        firstRow = qMin(firstRow, selection.at(i).top());
-        lastRow = qMax(lastRow, selection.at(i).bottom());
-    }
-
-    QModelIndex firstItem = model()->index(qMin(firstRow, lastRow), 0, rootIndex());
-    QModelIndex lastItem = model()->index(qMax(firstRow, lastRow), 0, rootIndex());
-
-    QRect firstRect = visualRect(firstItem);
-    QRect lastRect = visualRect(lastItem);
-
-    return firstRect.unite(lastRect);
-}
-
-
-void VisualizerWindow::watchExpression(const QString &exp)
-{
-}
-
-void VisualizerWindow::removeWatchExpression(const QString &exp)
-{
-}
+{}
 
 
 } // namespace Internal

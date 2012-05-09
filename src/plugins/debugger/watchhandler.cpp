@@ -767,8 +767,8 @@ QVariant WatchModel::data(const QModelIndex &idx, int role) const
 {
     const WatchItem *item = watchItem(idx);
     const WatchItem &data = *item;
-        qDebug() << "Got locals watchpoint: " << " " <<  data.type <<
-        data.name << " " << data.value;
+//    qDebug() << "Got locals watchpoint: " << " " <<  data.type <<
+//                data.name << " " << data.value;
 
     switch (role) {
         case LocalsEditTypeRole:

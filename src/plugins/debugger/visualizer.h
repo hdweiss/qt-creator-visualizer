@@ -64,11 +64,6 @@ protected slots:
     void rowsInserted(const QModelIndex &parent, int start, int end);
     void rowsAboutToBeRemoved(const QModelIndex &parent, int start, int end);
 
-
-public slots:
-    void watchExpression(const QString &exp);
-    void removeWatchExpression(const QString &exp);
-
 protected:
 
  //   bool edit(const QModelIndex &index, EditTrigger trigger, QEvent *event);
@@ -93,9 +88,13 @@ private:
     VisualizerNode* addNode(QString *name);
     void addLink(VisualizerNode *node1, VisualizerNode *node2);
     void setupNodes();
+    QString getWatchData(QModelIndex index);
 
     QGraphicsScene *scene;
     QGraphicsView *gview;
+
+    // Hack
+    QMultiHash<QString, VisualizerNode*> nodemap;
 };
 
 

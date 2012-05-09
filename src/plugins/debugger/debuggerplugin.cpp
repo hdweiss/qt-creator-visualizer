@@ -2097,7 +2097,7 @@ void DebuggerPluginPrivate::connectEngine(DebuggerEngine *engine)
     //m_threadBox->setModel(engine->threadsModel());
     //m_threadBox->setModelColumn(ThreadData::ComboNameColumn);
     m_watchersWindow->setModel(engine->watchersModel());
-    //m_visualizerWindow->setModel(engine->watchersModel());
+    m_visualizerWindow->setModel(engine->watchersModel());
     m_qtMessageLogWindow->setModel(engine->qtMessageLogModel());
 
     engine->watchHandler()->rebuildModel();
