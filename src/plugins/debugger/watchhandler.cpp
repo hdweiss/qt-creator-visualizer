@@ -767,6 +767,8 @@ QVariant WatchModel::data(const QModelIndex &idx, int role) const
 {
     const WatchItem *item = watchItem(idx);
     const WatchItem &data = *item;
+        qDebug() << "Got locals watchpoint: " << " " <<  data.type <<
+        data.name << " " << data.value;
 
     switch (role) {
         case LocalsEditTypeRole:
@@ -863,7 +865,7 @@ QVariant WatchModel::data(const QModelIndex &idx, int role) const
 
         case LocalsIsWatchpointAtPointerValueRole:
             if (isPointerType(data.type)) {
-                BreakpointParameters bp(WatchpointAtAddress);
+               BreakpointParameters bp(WatchpointAtAddress);
                 bp.address = pointerValue(data.value);
                 return engine()->breakHandler()->findWatchpoint(bp) != 0;
             }

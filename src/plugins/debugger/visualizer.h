@@ -49,33 +49,53 @@ namespace Internal {
 //
 /////////////////////////////////////////////////////////////////////
 
-class VisualizerWindow : public QGraphicsView
+class VisualizerWindow : public QAbstractItemView
 {
     Q_OBJECT
 
 public:
     explicit VisualizerWindow(QWidget *parent = 0);
-    void setModel(QAbstractItemModel *model);
+    QRect visualRect(const QModelIndex &index) const;
+    void scrollTo(const QModelIndex &index, ScrollHint hint = EnsureVisible);
+    QModelIndex indexAt(const QPoint &point) const;
+
+protected slots:
+    void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
+    void rowsInserted(const QModelIndex &parent, int start, int end);
+    void rowsAboutToBeRemoved(const QModelIndex &parent, int start, int end);
+
 
 public slots:
     void watchExpression(const QString &exp);
     void removeWatchExpression(const QString &exp);
 
 protected:
-//    void paintEvent(QPaintEvent *event);
 
-    void keyPressEvent(QKeyEvent *ev);
-    void mouseDoubleClickEvent(QMouseEvent *ev);
-    void contextMenuEvent(QContextMenuEvent *ev);
+ //   bool edit(const QModelIndex &index, EditTrigger trigger, QEvent *event);
+    QModelIndex moveCursor(QAbstractItemView::CursorAction cursorAction,
+                           Qt::KeyboardModifiers modifiers);
 
-    void dragEnterEvent(QDragEnterEvent *ev);
-    void dropEvent(QDropEvent *ev);
-    void dragMoveEvent(QDragMoveEvent *ev);
+    int horizontalOffset() const;
+    int verticalOffset() const;
+
+    bool isIndexHidden(const QModelIndex &index) const;
+
+    void setSelection(const QRect&, QItemSelectionModel::SelectionFlags command);
+
+    void mouseReleaseEvent(QMouseEvent *event);
+    void paintEvent(QPaintEvent *event);
+    void resizeEvent(QResizeEvent *event);
+    void scrollContentsBy(int dx, int dy);
+
+    QRegion visualRegionForSelection(const QItemSelection &selection) const;
 
 private:
     VisualizerNode* addNode(QString *name);
     void addLink(VisualizerNode *node1, VisualizerNode *node2);
+    void setupNodes();
+
     QGraphicsScene *scene;
+    QGraphicsView *gview;
 };
 
 

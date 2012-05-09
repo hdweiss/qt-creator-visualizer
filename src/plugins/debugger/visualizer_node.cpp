@@ -3,11 +3,12 @@
 #include "visualizer_link.h"
 #include "visualizer_node.h"
 
-VisualizerNode::VisualizerNode()
+VisualizerNode::VisualizerNode(QWidget *widget)
 {
     myTextColor = Qt::darkGreen;
     myOutlineColor = Qt::darkBlue;
     myBackgroundColor = Qt::white;
+    mWidget = widget;
 
     setFlags(ItemIsMovable | ItemIsSelectable);
 }

@@ -13,7 +13,7 @@ class VisualizerNode : public QGraphicsItem
     Q_DECLARE_TR_FUNCTIONS(VisualizerNode)
 
 public:
-    VisualizerNode();
+    VisualizerNode(QWidget* widget);
     ~VisualizerNode();
 
     void setText(const QString &text);
@@ -47,6 +47,7 @@ private:
     QColor myTextColor;
     QColor myBackgroundColor;
     QColor myOutlineColor;
+    QWidget *mWidget;
 };
 
 #endif

@@ -59,6 +59,7 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsView>
+#include <QScrollBar>
 #include <QApplication>
 #include <QPalette>
 #include <QClipboard>
@@ -79,11 +80,10 @@ static DebuggerEngine *currentEngine()
 }
 
 VisualizerNode* VisualizerWindow::addNode(QString *name) {
-    VisualizerNode *node = new VisualizerNode;
+    VisualizerNode *node = new VisualizerNode(viewport());
     node->setText(*name);
+    node->setPos(QPoint(40, 50));
 
-    node->setPos(QPoint(40,
-                        50));
     scene->addItem(node);
     return node;
 }
@@ -93,75 +93,179 @@ void VisualizerWindow::addLink(VisualizerNode* node1, VisualizerNode* node2) {
     scene->addItem(link);
 }
 
-VisualizerWindow::VisualizerWindow(QWidget *parent)
-  : QGraphicsView(parent)
+void VisualizerWindow::setupNodes()
 {
-//    setMinimumSize(400, 400);
-//    setMaximumSize(400, 400);
+    VisualizerNode *node1 = addNode(new QString("Node 1"));
+    VisualizerNode *node2 = addNode(new QString("Node 2"));
+    addLink(node1, node2);
+}
 
+VisualizerWindow::VisualizerWindow(QWidget *parent)
+    : QAbstractItemView(parent)
+{
     setObjectName(QLatin1String("VisualizerWindow"));
     setWindowTitle(tr("Visualizer"));
     setAcceptDrops(true);
     qDebug() << "VisualizeWindow()";
 
     scene = new QGraphicsScene(0, 0, 600, 500);
-    setScene(scene);
-    setDragMode(QGraphicsView::RubberBandDrag);
-    setRenderHints(QPainter::Antialiasing
-                         | QPainter::TextAntialiasing);
-    setContextMenuPolicy(Qt::ActionsContextMenu);
+    gview = new QGraphicsView(scene);
 
-    VisualizerNode *node1 = addNode(new QString("Node 1"));
-    VisualizerNode *node2 = addNode(new QString("Node 2"));
-    addLink(node1, node2);
+    setViewport(gview);
+
+    setupNodes();
 }
 
-//void VisualizerWindow::paintEvent(QPaintEvent *event) {
-//    QPainter painter;
-//    painter.begin(this);
-//    painter.drawEllipse(2, 2, 200, 200);
-//    painter.end();
-//}
-
-void VisualizerWindow::keyPressEvent(QKeyEvent *ev)
-{
+void VisualizerWindow::paintEvent(QPaintEvent *event) {
 }
 
-void VisualizerWindow::dragEnterEvent(QDragEnterEvent *ev)
+void VisualizerWindow::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (ev->mimeData()->hasText()) {
-        ev->setDropAction(Qt::CopyAction);
-        ev->accept();
+    QAbstractItemView::mouseReleaseEvent(event);
+    viewport()->update();
+}
+
+QModelIndex VisualizerWindow::moveCursor(QAbstractItemView::CursorAction cursorAction,
+                                         Qt::KeyboardModifiers modifiers)
+{
+    QModelIndex current = currentIndex();
+    viewport()->update();
+    return current;
+}
+
+int VisualizerWindow::horizontalOffset() const
+{
+    return horizontalScrollBar()->value();
+}
+
+int VisualizerWindow::verticalOffset() const
+{
+    return verticalScrollBar()->value();
+}
+
+void VisualizerWindow::resizeEvent(QResizeEvent * /* event */)
+{
+    updateGeometries();
+}
+
+void VisualizerWindow::rowsInserted(const QModelIndex &parent, int start, int end)
+{
+    for (int row = start; row <= end; ++row) {
+
+        QModelIndex index = model()->index(row, 1, rootIndex());
+        double value = model()->data(index).toDouble();
     }
+
+    QAbstractItemView::rowsInserted(parent, start, end);
 }
 
-void VisualizerWindow::dragMoveEvent(QDragMoveEvent *ev)
+void VisualizerWindow::rowsAboutToBeRemoved(const QModelIndex &parent, int start, int end)
 {
-    if (ev->mimeData()->hasText()) {
-        ev->setDropAction(Qt::CopyAction);
-        ev->accept();
+    for (int row = start; row <= end; ++row) {
+
+        QModelIndex index = model()->index(row, 1, rootIndex());
+        double value = model()->data(index).toDouble();
     }
+
+    QAbstractItemView::rowsAboutToBeRemoved(parent, start, end);
 }
 
-void VisualizerWindow::dropEvent(QDropEvent *ev)
+void VisualizerWindow::scrollContentsBy(int dx, int dy)
 {
-    if (ev->mimeData()->hasText()) {
-        watchExpression(ev->mimeData()->text());
-        //ev->acceptProposedAction();
-        ev->setDropAction(Qt::CopyAction);
-        ev->accept();
+    viewport()->scroll(dx, dy);
+}
+
+void VisualizerWindow::dataChanged(const QModelIndex &topLeft,
+                                   const QModelIndex &bottomRight)
+{
+    QAbstractItemView::dataChanged(topLeft, bottomRight);
+
+    for (int row = 0; row < model()->rowCount(rootIndex()); ++row) {
+
+        QModelIndex index = model()->index(row, 1, rootIndex());
+        double value = model()->data(index).toDouble();
+
     }
+    viewport()->update();
 }
 
-void VisualizerWindow::mouseDoubleClickEvent(QMouseEvent *ev)
+bool VisualizerWindow::isIndexHidden(const QModelIndex & /*index*/) const
+{
+    return false;
+}
+
+QModelIndex VisualizerWindow::indexAt(const QPoint &point) const
+{
+    return QModelIndex();
+}
+
+QRect VisualizerWindow::visualRect(const QModelIndex &index) const
+{
+    QRect rect = QRect();
+    if (rect.isValid())
+        return QRect(rect.left() - horizontalScrollBar()->value(),
+                     rect.top() - verticalScrollBar()->value(),
+                     rect.width(), rect.height());
+    else
+        return rect;
+}
+
+void VisualizerWindow::scrollTo(const QModelIndex &index, ScrollHint)
+{
+    QRect area = viewport()->rect();
+    QRect rect = visualRect(index);
+
+    if (rect.left() < area.left())
+        horizontalScrollBar()->setValue(
+                    horizontalScrollBar()->value() + rect.left() - area.left());
+    else if (rect.right() > area.right())
+        horizontalScrollBar()->setValue(
+                    horizontalScrollBar()->value() + qMin(
+                        rect.right() - area.right(), rect.left() - area.left()));
+
+    if (rect.top() < area.top())
+        verticalScrollBar()->setValue(
+                    verticalScrollBar()->value() + rect.top() - area.top());
+    else if (rect.bottom() > area.bottom())
+        verticalScrollBar()->setValue(
+                    verticalScrollBar()->value() + qMin(
+                        rect.bottom() - area.bottom(), rect.top() - area.top()));
+
+    update();
+}
+
+
+void VisualizerWindow::setSelection(const QRect &rect, QItemSelectionModel::SelectionFlags command)
 {
 }
 
-void VisualizerWindow::contextMenuEvent(QContextMenuEvent *ev)
+QRegion VisualizerWindow::visualRegionForSelection(const QItemSelection &selection) const
 {
-    DebuggerEngine *engine = currentEngine();
-    WatchHandler *handler = engine->watchHandler();
+    int ranges = selection.count();
+
+    if (ranges == 0)
+        return QRect();
+
+    // Note that we use the top and bottom functions of the selection range
+    // since the data is stored in rows.
+
+    int firstRow = selection.at(0).top();
+    int lastRow = selection.at(0).top();
+
+    for (int i = 0; i < ranges; ++i) {
+        firstRow = qMin(firstRow, selection.at(i).top());
+        lastRow = qMax(lastRow, selection.at(i).bottom());
+    }
+
+    QModelIndex firstItem = model()->index(qMin(firstRow, lastRow), 0, rootIndex());
+    QModelIndex lastItem = model()->index(qMax(firstRow, lastRow), 0, rootIndex());
+
+    QRect firstRect = visualRect(firstItem);
+    QRect lastRect = visualRect(lastItem);
+
+    return firstRect.unite(lastRect);
 }
+
 
 void VisualizerWindow::watchExpression(const QString &exp)
 {
